@@ -1,0 +1,59 @@
+# =====================================================================
+# CoffeeNChill - Part 2 local orchestration
+# Start everything with ONE command:   docker-compose up      (or: docker compose up)
+#
+# BEFORE FIRST RUN: replace every  yourdockerhubuser  below with your Docker Hub username, e.g.
+#   Linux/macOS:  sed -i 's/yourdockerhubuser/jsmith/g' docker-compose.yml
+#   PowerShell :  (Get-Content docker-compose.yml) -replace 'yourdockerhubuser','jsmith' | Set-Content docker-compose.yml
+#
+# Both images are PULLED FROM DOCKER HUB - there is deliberately no "build:" section.
+# =====================================================================
+name: coffeenchill
+
+services:
+  # ---------- Azure Storage emulator (Blob 10000 / Queue 10001 / Table 10002) ----------
+  azurite:
+    image: yourdockerhubuser/coffeenchill-azurite:v1.0
+    container_name: coffeenchill-azurite
+    restart: unless-stopped
+    ports:
+      - "10000:10000"   # Blob
+      - "10001:10001"   # Queue
+      - "10002:10002"   # Table
+    volumes:
+      - azurite-data:/data          # persists tables, queues and documents between restarts
+    networks:
+      - coffeenchill-net
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect(10002,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # ---------- Azure Functions host (HTTP + Queue triggers) ----------
+  functions:
+    image: yourdockerhubuser/coffeenchill-functions:v2.0
+    container_name: coffeenchill-functions
+    restart: unless-stopped
+    depends_on:
+      azurite:
+        condition: service_healthy    # wait until Azurite accepts connections
+    ports:
+      - "7071:80"                     # http://localhost:7071/api/...
+    environment:
+      # Inside the compose network Azurite is reachable by its service name "azurite"
+      AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
+      FUNCTIONS_WORKER_RUNTIME: "dotnet-isolated"
+      ORDER_STATUS_STEP_DELAY_SECONDS: "3"
+      ORDER_SIMULATE_TRANSITIONS: "true"
+      ENABLE_DIAGNOSTICS: "true"
+      # FileShareConnectionString: "<real Azure Storage connection string>"   # optional: use a genuine Azure File Share
+    networks:
+      - coffeenchill-net
+
+networks:
+  coffeenchill-net:
+    driver: bridge
+
+volumes:
+  azurite-data:

@@ -1,0 +1,7 @@
+CoffeeNChill - Barista Recipe Sheet
+
+Espresso:   18 g coffee, 36 g out, 27 seconds.
+Flat White: double espresso + 150 ml steamed milk (60-65 C).
+Iced Latte: double espresso, 150 ml cold milk, ice to the top.
+
+Always purge the steam wand after every use.

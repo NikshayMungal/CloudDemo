@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "FileShareConnectionString": "",
+    "ORDER_STATUS_STEP_DELAY_SECONDS": "3",
+    "ORDER_SIMULATE_TRANSITIONS": "true",
+    "ENABLE_DIAGNOSTICS": "true"
+  },
+  "Host": {
+    "CORS": "*"
+  }
+}

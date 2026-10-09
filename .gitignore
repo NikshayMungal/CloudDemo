@@ -1,0 +1,17 @@
+## .NET / build output
+bin/
+obj/
+.vs/
+*.user
+*.suo
+## Azurite local artefacts
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
+AzuriteConfig
+.azurite/
+## IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
